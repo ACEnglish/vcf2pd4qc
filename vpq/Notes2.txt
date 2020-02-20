@@ -1,0 +1,81 @@
+idea -- instead of parsing a bunch of vcf files with awk/sed/bcftools I want to turn the vcfs into pandas dataframes
+and then I can do the work to process each of the pieces more quickly
+
+See vcf2pd.py for how to translate a single VCF into a pandas dataframe
+
+See submit_vcf2pd.sh to see how I created multiple subsets based on cytobands
+
+Start with type_counter.py to see an example of how I imagine this thing working and to count all the events by SVTYPE
+
+See size_type_counter.py for the next level of analysis
+
+
+TODO:
+	Turn this into a package so I can reuse methods/classes
+	Create an next level advanced query
+	Make an easy way to return the dataframes 
+		The key to this is wrapping the "mulit_*"
+		And then putting specific operations on the multi_*
+		Let's think of a usecase
+			I want to return the union of all v2ps, multi then pd.concat
+			I want to return the union of all v2ps with a query... like svlen within range, or of a specific
+			type, so I write multi that takes files, and for each, opens, passes to a method
+			And for each of the things returned, the user can do something else
+
+			So it'd be like:
+			ccdg = VPQ(files, threads=1)
+			ccdg(get_svs, *args_for_get_svs, **kwargs_for_get_svs)
+			returns the list of all the pieces
+			and the user can do the work on top of that
+				(probably starting with pd.concat)
+			This is simplest for getting the raw data back
+
+
+			For doing operations on the data
+			
+		So, instead
+		like, if I subset to a single individual and I want to reuse type_counter
+		I have to wrap
+	
+
+    
+The idea is that dataframes are easier to parse than VCFs when doing QC
+If we wrap this command up with a script that calls across mutiple regions
+we can create lots of little dataframes that are easier to parse
+
+Then, when we have our QC plots inside of methods that take as input, a 
+single dataframe, we can use wrappers to combine the multiple sub-parts
+
+For example
+
+
+def size_type_histogram(data): 
+    # make a histogram the frequency of each size type
+
+def count_size_types(data):
+    # counts by sizes and types the sizes and types of returns Counter
+
+def count_conslidate(sub_fun, files):
+    # consolidate Counter objects over all the files
+    running_cnt = None
+    for i in files:
+        d = joblib.load(i)
+        if running_cnt is None:
+            running_cnt = sub_fun(d["table"])
+        else:
+            running_cnt.update(sub_fn(d["table"]))
+    return running_cnt
+
+# we MIGHT be able to parralize the count_consolidate part (Simple pool should work)
+# And I feel like there's a decorator approach so that we can simplify this stuff, 
+# currently would be
+
+files = ['f1.jl', 'f2.jl']
+size_type_histogram(count_consolidate(count_size_types, files))
+
+would be nice to do size_type_histogram(files)
+
+This whole thing should help with rapid development of qc numbers/plots
+The best part, if you don't want all the splits, whatever I make should still work on a single, big vcf,
+it would just take longer and need a bigger machine to run
+

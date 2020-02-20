@@ -19,15 +19,15 @@ def __partial_wrapper(funcs):
     """
     return partial(__reduce_wrapper, funcs)
 
-def pipeline(pipe, data, workers=1):
+def fchain(pipe, data, workers=1):
     """
-    Runs chained functions over every piece of data.
+    Runs chained functions over every piece of data using a pool of futures.
     Yields results of chained functions called per data.
 
     pipe: list of [(function, kwargs), ...]
         - each function must be defined with at least `def foobar(data)`.
         - kwargs is a dictionary of other parameters the function may need. 
-        - kwargs may be an empty dict if no parameters are needed (i.e. {})
+        - if no parameters are needed, an item in the list can just be a function
     data: list data to process
         - data must be hashable
     workers: maximum number of ThreadPoolExecutor workers to create
@@ -53,58 +53,6 @@ def pipeline(pipe, data, workers=1):
                 continue
             yield cur_result
 
-def test():
-    """
-    Simple test pipeline
-    """
-    import time
-    import random
-    import itertools
-
-    # Functions to call
-    def f1(data, f1arg=None):
-        return ["would be opening " + str(data) + " with " + str(f1arg)]
-
-    def f2(data, f2arg=None):
-        # lets shuffle the results
-        time.sleep(random.randint(0, 1))
-        return data + ["And I altered it with " + str(f2arg)]
-    
-    def f3(data):
-        # add this to the end
-        return data + ['all the way?']
-    
-    def consolidate_resize(data):
-        # put them all together
-        ret = []
-        for i in data:
-            ret.extend(i)
-        ret2  = []
-        cur = []
-        for i in ret:
-            cur.append(i)
-            if len(cur) == 3:
-                ret2.append(cur)
-                cur = []
-        if cur:
-            ret2.append(cur)
-        return ret2
-    
-    data = range(10)
-    pipe = [(f1, {"f1arg": 'a'}),
-            (f2, {"f2arg": 'boop'}),
-            f3,
-            ]
-    
-    for i in pipeline(pipe, data, workers=int(sys.argv[1])):
-        print("collected %r" % (i))
-
-def test2():
-    def gen(data):
-        for i in range(10):
-            yield i
-    pipe = [gen, print]
-    for i in pipeline(pipe, [0]): print(i)
 
 if __name__ == '__main__':
     test()
