@@ -118,7 +118,7 @@ def parse_args(args):
     return parser.parse_args(args)
 
     
-def main(args):
+def vcf2pd_main(args):
     """
     Run the program
     """
@@ -135,8 +135,4 @@ def main(args):
     cols, samples = make_header(v)
     data = {"table": vcf_to_frame(v, cols, chrom, start, end), "samples": samples}
     joblib.dump(data, args.out, compress=9)
-
-
-if __name__ == '__main__':
-    main(sys.argv[1:])
 
