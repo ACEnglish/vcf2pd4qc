@@ -1,0 +1,157 @@
+Why is this useful?
+
+Imagine we have a file with random words:
+    apple
+    banana
+    carpenter
+
+We want to read each line, count how frequently 'a' occurs.
+
+# example.1
+  count = 0
+  with open('my_file.txt', 'r') as fh:
+      for line in fh:
+          count += line.count('a')
+  print(count)
+
+Just doing `fh.count('a')` is simplier, but let's assume we must iterate over each line.
+
+Now, what if we have multiple files? Well we have to wrap the above code in a new loop.
+
+# example.2
+    files = ['my_file1.txt', 'my_file2.txt']
+    count = 0
+    for i in files:
+        with open('my_file.txt', 'r') as fh:
+            for line in fh:
+                count += line.count('a')
+
+What if we approached this differently? Let's throw this code away and begin again.
+
+def read_f(fn):
+    with open(fn, 'r') as fh:
+        for line in fh:
+            yield line
+
+def count_a(line):
+    return line.count('a')
+
+def sum_a(counts):
+    return sum(counts)
+
+# example.4
+sum_a(count_a(read('my_file.txt')))
+
+This is more complex than example.1, it becomes even worse when we need To adapt the 
+above code to handle multiple files. we have to add a new read function and edit the
+call to the example.4 line
+
+def new_read(files):
+    for f in files:
+    	for i in read(f):
+		yield i
+
+# example.5
+sum_a(count_a(new_read(['my_file.txt', 'my_file2.txt')))
+
+However, with the pipeline, we can use all these pieces more functionally.
+
+pipe = [read_f,
+        count_a,
+	sum_a]
+files = ['my_file.txt', 'my_file2.txt']
+
+for i in pipeline(pipe, files):
+	print(i)
+
+Pipeline automatically wraps and chains functions so they operate over multiple things.
+pipeline returns a generator of each of the inputs (files) processed, so to get the same result 
+as before, we need to do a final consolidation, but that is as simple as running:
+
+print(sum_a(pipeline(pipe, files)))
+
+The real advantage of all this is that you get parallelization for free.
+Pipeline will use futures to process each chained set of functions over each data input
+with however many workers specified.  For example, if we wanted to use 2 processors
+
+print(sum_a(pipeline(pipe, files, 2)))
+
+And, if we wanted to edit the pipeline by not counting a's at the beginning or end of the line, 
+we don't have to edit any of the existing code, we just need to add a new function and modify
+our pipe
+
+def trim_a(line, trim_length=1):
+	return line[trim_length:-trim_length]
+
+pipe2 = [read_f,
+	(trim_a, {"trim_length":2}),
+        count_a,
+	sum_a]
+
+This doesn't break the previous pipe! And we're reusing a lot of pieces.
+You may have noticed that we changed the second step to a tuple and added a dictionary.
+This is how we can pass parameters to the functions.
+You can set the non-data (first arg) parameters in that second dictionary object.
+
+What if you want to change the parameters based on the data...
+You would need to make a new function that wrapped the trim_a.
+For example, if we only wanted to trim if the length of the word was even
+
+def d_trim_a(data, trim_length):
+	if not len(data) % 2:
+		trim_length=trim_length
+	else:
+		trim_length=0
+	return trim_a(data, trim_length)
+
+pipe3 = [read_f,
+	(d_trim_a, {"trim_length":2}),
+        count_a,
+	sum_a]
+
+Now, we automatically parallelize each pipeline.
+
+This assumes that you do not need to resize the worker pool, and that the pieces
+through each pool will stay the same. 
+If you want to 'partition' or 'consolidate' between steps,
+you'll need to write a function that returns all of a pipeline's results and then
+you'll need to submit that result to a new pipeline.
+
+Sorry, there was no easy way to do 'load balancing' or coordinating
+
+If, you needed to consolidate all the results and then do more steps in parallel, you would need to make two pipelines
+with a consolidate in the middle
+
+
+pipe3
+consolidate(pipeline(pipe4, files))
+
+pipe4 - do other stuff
+for i in pipe:
+"""
+
+def read_f(fn):
+    ret = []
+    with open(fn, 'r') as fh:
+        for line in fh:
+            ret.append(line)
+    return ret
+
+def count_a(lines):
+    return [x.count('a') for x in lines]
+
+def sum_a(counts):
+    return sum(counts)
+
+# example.4
+def example4():
+    print(sum_a(count_a(read('my_file.txt'))))
+
+
+from pipeline import pipeline
+
+def example5():
+
+if __name__ == '__main__':
+    example4()
+    example5()
