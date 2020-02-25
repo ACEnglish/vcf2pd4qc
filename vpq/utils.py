@@ -12,6 +12,8 @@ class SV(Enum):
     INS=1
     DUP=2
     INV=3
+    NON=4 # Not and SV, SVTYPE
+    UNK=5 # Unknown SVTYPE
  
 SZBINS = ["(0,50]", "(50,100]", "(100,200]", "(200,300]", "(300,400]", 
           "(400,600]", "(600,800]", "(800,1k]", "(1k,2.5k]", 
@@ -43,6 +45,5 @@ def size_bin(sz):
         return"(2.5k,5k]"
     else:
         return ">5k"
-
 
 
