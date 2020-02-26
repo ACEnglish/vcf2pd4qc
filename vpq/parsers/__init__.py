@@ -1,8 +1,11 @@
-from vpq.parsers.VCF2PD import VCF2PD
 from vpq.parsers.v2p_lookup import VPQParsers
 
+from vpq.parsers import (
+    mucnv,
+    skeleton,
+    generic
+)
 
 __all__ = [
-    'VCF2PD'
-    'VPQParsers',
+    'VPQParsers'
 ]

@@ -1,4 +1,4 @@
-from vpq.parsers import VCF2PD
+from vpq.parsers.VCF2PD import VCF2PD
 
 class skeleton(VCF2PD):
     """ Parse very minimal information from a vcf to make a pd """

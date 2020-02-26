@@ -1,4 +1,5 @@
 from enum import Enum
+from pandas.api.types import CategoricalDtype
 
 class GT(Enum):
     NON=3
@@ -18,6 +19,8 @@ class SV(Enum):
 SZBINS = ["(0,50]", "(50,100]", "(100,200]", "(200,300]", "(300,400]", 
           "(400,600]", "(600,800]", "(800,1k]", "(1k,2.5k]", 
           "(2.5k,5k]", ">5k"]
+
+SZBINTYPE = CategoricalDtype(categories=SZBINS, ordered=True)
 
 def size_bin(sz):
     """
@@ -48,3 +51,13 @@ def size_bin(sz):
         return ">5k"
 
 
+QUALBINS = [f"({x},{x+10}]" for x in range(0, 100, 10)] + [">100"]
+
+def qual_bin(qual):
+    """
+    Bin a given qual
+    """
+    for idx, i in enumerate(range(0, 100, 10)):
+        if qual < i + 10:
+            return QUALBINS[idx]
+    

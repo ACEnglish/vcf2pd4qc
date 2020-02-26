@@ -1,7 +1,7 @@
 import numpy
 
 import vpq
-from vpq.parsers import VCF2PD
+from vpq.parsers.VCF2PD import VCF2PD
 
 
 class muCNV2PD(VCF2PD):

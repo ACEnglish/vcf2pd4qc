@@ -1,31 +1,29 @@
 """
 Main command for running stats
 """
+import sys
+import argparse
 from collections import OrderedDict
 
 import vpq
 
-TOOLCMDs = OrderedDict()
-TOOLCMDs["typecnt"] = vpq.stats.TypeCounter
-TOOLCMDs["size_type_cnt"] = vpq.stats.SizebinTypeCounter
-TOOLCMDs["sample_gt_cnt"] = vpq.stats.SampleGTCount
-
 USAGE="""\
 vpq stats v{0} - Run stats over joblibs
     CMDs:
-        typecnt       {1}
-        size_type_cnt {2}
-        sample_gt_cnt {3}
-""".format(vpq.VERSION, *[i.__doc__ for i in TOOLCMDs.values()])
+{1}
+""".format(vpq.VERSION,  
+           "\n".join("        {0: <15}{1}".format(x,y.__doc__)
+                    for x,y in vpq.STATCMDs.items())
+          )
 
 def stats_main(args):
     """
     Argument parsing
     """
-    parser = argparse.ArgumentParser(prog="vpq stats", description=__doc__,
+    parser = argparse.ArgumentParser(prog="vpq stats", description=USAGE,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
 
-    parser.add_argument("cmd", metavar="CMD", choices=TOOLCMDs.keys(), type=str,
+    parser.add_argument("cmd", metavar="CMD", choices=vpq.STATCMDs.keys(), type=str,
                         help="Command to execute")
     parser.add_argument("options", metavar="OPTIONS", nargs=argparse.REMAINDER,
                         help="Options to pass to the command")
@@ -35,5 +33,6 @@ def stats_main(args):
         sys.exit(1)
 
     args = parser.parse_args(args)
-    TOOLS[args.cmd](args.options)
+    m_stat = vpq.STATCMDs[args.cmd](args.options)
+    print(m_stat.to_txt())
 

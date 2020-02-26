@@ -9,3 +9,6 @@ vpq stats -h
 #vpq stats size_type_counter ~/mucnv_ccdg/dataframes/CCDG.chr7q11.*.jl -t 4
 vpq vcf2pd -p skeleton -o test.chr -r test.band.bed ~/science/english/WhitePaper/Quintuplicates/biograph_results/merge.vcf.gz
 vpq vcf2pd -p generic -o test.chr -r test.band.bed /home/english/science/english/WhitePaper/Quintuplicates/biograph_results/merge.vcf.gz
+vpq stats type_cnt test.chr1p21.1.jl 
+vpq stats size_type_cnt test.chr1p21.1.jl 
+vpq stats sample_gt_cnt test.chr1p21.1.jl

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-class VCF2PD():
+class VCF2PD(ABC):
     """
     Abstract Base Class for VCF2PD parsers
     """
