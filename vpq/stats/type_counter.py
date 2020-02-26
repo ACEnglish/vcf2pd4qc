@@ -4,22 +4,12 @@ Count the SVTYPEs
 from collections import Counter
 
 import joblib
-import pandas as pd
 # can't use seaborn with this version of python... need to put in a ticket
 
 from vpq import fchain
-import vpq.utils as vutils
+from vpq.utils import SV
 from vpq.stats.stat import CMDStat
-
-# Can i move these to a library of functions...
-# Would need to standardize their use
-# data is always a dict with at-least {'table', 'samples'} keys... never remove that...
-def type_counter(data):
-    """
-    Single data frame type counting
-    """
-    data["type_count"] = Counter(data["table"]["svtype"])
-    return data
+from vpq.stats.tools import type_counter
 
 class TypeCounter(CMDStat):
     """ Count the SVTYPEs """
@@ -38,16 +28,5 @@ class TypeCounter(CMDStat):
         Pretty print the results
         """
         print("All SVs")
-        for i in vutils.SV:
+        for i in SV:
             print('{name}\t{count:,}'.format(name=i.name, count=data["type_count"][i.value]))
-
-       
-def main():
-    pass
-
-def test():
-    fns = ["/home/english/science/english/WhitePaper/Quintuplicates/biograph_results/dataframes/quint.chr10p11.1.jl"]
-    x = TypeCounter(fns)
-    
-if __name__ == '__main__':
-    test()

@@ -5,18 +5,19 @@ Main entry point for the sub commands
 import sys
 import argparse
 
+import vpq
 from vpq.vcf2pd import vcf2pd_main
-from vpq.stats import stats_main
+from vpq.stats_main import stats_main
 
 VERSION="0.0.1-dev"
 
 USAGE = """\
 vcf2pd4qc v%s - Library that assists the analysis of VCF files
     CMDs:
-        vcf2pd           Convert a vcf file to a joblib
+        vcf2pd           Convert vcf to joblib
         stats            Run stats over joblibs
         version          Print the version and exit
-""" % VERSION
+""" % vpq.VERSION
 
 def version(args):
     """Print the version"""
@@ -25,7 +26,6 @@ def version(args):
 TOOLS =  {"vcf2pd": vcf2pd_main,
           "stats": stats_main,
           "version": version}
-
 
 def parseArgs():
     """

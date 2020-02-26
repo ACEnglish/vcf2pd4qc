@@ -12,9 +12,7 @@ import pysam
 import joblib
 import pandas as pd
 
-from vpq import fchain
-from vpq.utils import GT, SV
-from vpq.parsers import VPQParsers
+import vpq
 
 def vcf_to_frame(m_converter, chrom=None, start=None, end=None):
     """
@@ -47,7 +45,7 @@ def parse_args(args):
                         help="Bed File of chrom, start, end, name to create")
     parser.add_argument("-o", "--out", default="vcf2pd.jl",
                         help="Joblib file outfile suffix ('chrname.jl' may be appended from -r)")
-    parser.add_argument("-p", "--parser", choices=VPQParsers.keys(), default='skeleton',
+    parser.add_argument("-p", "--parser", choices=vpq.VPQParsers.keys(), default='skeleton',
                         help="Column parsing object")
     parser.add_argument("-t", "--threads", default=1, type=int,
                         help="When regions are provided, allow up to threads workers")
@@ -60,7 +58,7 @@ def task(item):
     task item is a dictionary of {"input":input.vcf, "parser": parsername, "output":outputname, "chrom", "start", "end"}
     """
     v = pysam.VariantFile(item["input"])
-    m_converter = VPQParsers[item["parser"]](v) # Something I'll figure out how to get...?
+    m_converter = vpq.VPQParsers[item["parser"]](v) # Something I'll figure out how to get...?
     cols, samples = m_converter.make_header()
     data = {"table": vcf_to_frame(m_converter, item["chrom"], item["start"], item["end"]), "samples": samples}
     joblib.dump(data, item["output"], compress=9)
@@ -91,5 +89,5 @@ def vcf2pd_main(args):
             oname = args.out + ".jl"
         items.append({"input":vcf_fn, "parser":args.parser, "output":oname, "chrom": chrom, "start":start, "end":end})
 
-    for _ in fchain([task], items, args.threads):
+    for _ in vpq.fchain([task], items, args.threads):
         pass

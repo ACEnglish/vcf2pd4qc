@@ -2,40 +2,25 @@ import sys
 import argparse
 from collections import OrderedDict
 
-from vpq.stats import (
+from vpq.stats.type_counter import TypeCounter
+from vpq.stats.size_type_counter import SizebinTypeCounter
+from vpq.stats.per_sample_gt_count import SampleGTCount
+
+from vpq.stats.tools import (
+    add_sizebin_column,
+    split_by_type,
     type_counter,
-    size_type_counter
+    sizebin_type_counter,
 )
 
-VERSION="0.0.1-dev"
+__all__ = [
+    'TypeCounter',
+    'SizebinTypeCounter',
+    'SzmpleGTCount',
+    'add_sizebin_column',
+    'split_by_type',
+    'type_counter',
+    'sizebin_type_counter'
+]
 
-TOOLS = OrderedDict()
-TOOLS["typecnt"] = type_counter.TypeCounter
-TOOLS["size_type_counter"] = size_type_counter.main
-
-USAGE = """\
-vpq stats v{0} - Run stats over joblibs
-    CMDs:
-        typecnt           {1}
-        size_type_counter {2}
-""".format(VERSION, *[i.__doc__ for i in TOOLS.values()])
-
-def stats_main(args):
-    """
-    Argument parsing
-    """
-    parser = argparse.ArgumentParser(prog="vpq stats", description=USAGE,
-                                     formatter_class=argparse.RawDescriptionHelpFormatter)
-
-    parser.add_argument("cmd", metavar="CMD", choices=TOOLS.keys(), type=str,
-                        help="Command to execute")
-    parser.add_argument("options", metavar="OPTIONS", nargs=argparse.REMAINDER,
-                        help="Options to pass to the command")
-
-    if len(args) == 1:
-        parser.print_help(sys.stderr)
-        sys.exit(1)
-
-    args = parser.parse_args(args)
-    TOOLS[args.cmd](args.options)
 

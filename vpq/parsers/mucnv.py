@@ -1,7 +1,7 @@
 import numpy
 
-import vpq.utils as vtils
-from vpq.parsers.VCF2PD import VCF2PD
+import vpq
+from vpq.parsers import VCF2PD
 
 
 class muCNV2PD(VCF2PD):
@@ -17,15 +17,15 @@ class muCNV2PD(VCF2PD):
         for sample in entry.samples:
             gt = entry.samples[sample]["GT"]
             if None in gt:
-                gt = vtils.GT.NON.value
+                gt = vpq.GT.NON.value
             elif gt == (0, 0):
-                gt = vtils.GT.REF.value
+                gt = vpq.GT.REF.value
             elif gt == (0, 1):
-                gt = vtils.GT.HET.value
+                gt = vpq.GT.HET.value
             elif gt == (1, 1):
-                gt = vtils.GT.HOM.value
+                gt = vpq.GT.HOM.value
             else:
-                gt = vtils.GT.UNK.value
+                gt = vpq.GT.UNK.value
             gts.append(gt)
             dps.append(entry.samples[sample]["DP"])
 

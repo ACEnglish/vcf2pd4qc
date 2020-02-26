@@ -1,9 +1,25 @@
+from vpq.version import VERSION
 
 from vpq.pipeline import fchain
 
-from vpq.parsers.VCF2PD import VCF2PD
+import vpq.stats as stats
 
+from vpq.utils import (
+    GT,
+    SV,
+    size_bin
+)
+
+from vpq.stats import(
+    
+)
 __all__ = [
+    'VERSION',
     'fchain',
-    'VCF2PD'
+        
+    'stats',
+
+    'GT',
+    'SV',
+    'size_bin'
 ]

@@ -1,7 +1,7 @@
 import numpy
 
-import vpq.utils as vtils
-from vpq.parsers.VCF2PD import VCF2PD
+import vpq
+from vpq.parsers import VCF2PD
 
 class generic(VCF2PD):
     """ Parse generic VCF """
@@ -38,15 +38,15 @@ class generic(VCF2PD):
         for sample in entry.samples:
             gt = entry.samples[sample]["GT"]
             if None in gt:
-                gt = vtils.GT.NON.value
+                gt = vpq.GT.NON.value
             elif gt == (0, 0):
-                gt = vtils.GT.REF.value
+                gt = vpq.GT.REF.value
             elif gt == (0, 1):
-                gt = vtils.GT.HET.value
+                gt = vpq.GT.HET.value
             elif gt == (1, 1):
-                gt = vtils.GT.HOM.value
+                gt = vpq.GT.HOM.value
             else:
-                gt = vtils.GT.UNK.value
+                gt = vpq.GT.UNK.value
             gts.append(gt)
             q = entry.samples[sample]["GQ"]
             gqs.append(q if q else 99)
@@ -59,19 +59,19 @@ class generic(VCF2PD):
         """ Parse very minimal information from a vcf to make a pd """
         # If someone made SVTYPE= some number 0-len(SV), this would cause an issue for 
         # the last part of below if statement
-        svtype = entry.info["SVTYPE"] if "SVTYPE" in entry.info else vtils.SV.NON.value
+        svtype = entry.info["SVTYPE"] if "SVTYPE" in entry.info else vpq.SV.NON.value
         svlen = entry.info["SVLEN"] if "SVLEN" in entry.info else 0 
         # Convert STR to ENUM
         if svtype == "DEL":
-            svtype = vtils.SV.DEL.value
+            svtype = vpq.SV.DEL.value
         elif svtype == "INS":
-            svtype = vtils.SV.INS.value
+            svtype = vpq.SV.INS.value
         elif svtype == "DUP":
-            svtype = vtils.SV.DUP.value
+            svtype = vpq.SV.DUP.value
         elif svtype == "INV":
-            svtype = vtils.SV.INV.value
-        elif svtype not in vtils.SV:
-            svtype = vtils.SV.UNK.value
+            svtype = vpq.SV.INV.value
+        elif svtype not in vpq.SV:
+            svtype = vpq.SV.UNK.value
         ret = [entry.chrom, entry.start, entry.stop, entry.qual, ";".join(entry.filter.keys()), svtype, svlen]    
         gts, gqs, dps = self.extract_sample(entry)
         ret.extend(gts)
