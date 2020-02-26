@@ -37,7 +37,7 @@ def split_by_type(data):
     for i in vutils.SV:
         yield i, data.loc[data["svtype"] == i.value]
   
-def size_bin_counter(data, usemu=False):
+def size_bin_counter(data):
     """
     Given an interable of [(SV, dataframe),..]
     Create a dict with key of each SV and value a Counter over sizebins

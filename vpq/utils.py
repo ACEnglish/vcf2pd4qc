@@ -23,6 +23,7 @@ def size_bin(sz):
     """
     Bin a given size
     """
+    sz = abs(sz)
     if sz <= 50:
         return "(0,50]"
     elif sz <= 100:

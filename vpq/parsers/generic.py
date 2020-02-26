@@ -72,7 +72,7 @@ class generic(VCF2PD):
             svtype = vtils.SV.INV.value
         elif svtype not in vtils.SV:
             svtype = vtils.SV.UNK.value
-        ret = [entry.chrom, entry.start, entry.stop, entry.qual, str(entry.filter), svtype, svlen]    
+        ret = [entry.chrom, entry.start, entry.stop, entry.qual, ";".join(entry.filter.keys()), svtype, svlen]    
         gts, gqs, dps = self.extract_sample(entry)
         ret.extend(gts)
         ret.extend(gqs)

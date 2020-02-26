@@ -12,14 +12,16 @@ import pysam
 import joblib
 import pandas as pd
 
+from vpq import fchain
 from vpq.utils import GT, SV
 from vpq.parsers import VPQParsers
 
-def vcf_to_frame(m_converter, m_vcf, cols, chrom=None, start=None, end=None):
+def vcf_to_frame(m_converter, chrom=None, start=None, end=None):
     """
     Pull in all of the relevant information for parsing the SVs
     """
     # Fetch every entry over the region
+    m_vcf = m_converter.vcf
     if chrom is not None:
         fetch = m_vcf.fetch(chrom, start, end)
     else:
@@ -47,9 +49,23 @@ def parse_args(args):
                         help="Joblib file outfile suffix ('chrname.jl' may be appended from -r)")
     parser.add_argument("-p", "--parser", choices=VPQParsers.keys(), default='skeleton',
                         help="Column parsing object")
+    parser.add_argument("-t", "--threads", default=1, type=int,
+                        help="When regions are provided, allow up to threads workers")
     return parser.parse_args(args)
 
-    
+
+def task(item):
+    """
+    Given a task item, do the work
+    task item is a dictionary of {"input":input.vcf, "parser": parsername, "output":outputname, "chrom", "start", "end"}
+    """
+    v = pysam.VariantFile(item["input"])
+    m_converter = VPQParsers[item["parser"]](v) # Something I'll figure out how to get...?
+    cols, samples = m_converter.make_header()
+    data = {"table": vcf_to_frame(m_converter, item["chrom"], item["start"], item["end"]), "samples": samples}
+    joblib.dump(data, item["output"], compress=9)
+
+ 
 def vcf2pd_main(args):
     """
     Run the program
@@ -67,15 +83,13 @@ def vcf2pd_main(args):
                 data[1] = int(data[1])
                 data[2] = int(data[2])
                 regions.append(data[:4])
-        
-    v = pysam.VariantFile(vcf_fn)
-    m_converter = VPQParsers[args.parser](v) # Something I'll figure out how to get...?
-    cols, samples = m_converter.make_header()
+    items = []
     for chrom, start, end, name in regions:
-        data = {"table": vcf_to_frame(m_converter, v, cols, chrom, start, end), "samples": samples}
         if name is not None:
             oname = "%s%s%s.jl" % (args.out, chrom, name)
         else:
             oname = args.out + ".jl"
-        joblib.dump(data, oname, compress=9)
+        items.append({"input":vcf_fn, "parser":args.parser, "output":oname, "chrom": chrom, "start":start, "end":end})
 
+    for _ in fchain([task], items, args.threads):
+        pass

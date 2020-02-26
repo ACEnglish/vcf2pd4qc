@@ -10,13 +10,13 @@ from vpq.stats import (
 VERSION="0.0.1-dev"
 
 TOOLS = OrderedDict()
-TOOLS["type_counter"] = type_counter.main
+TOOLS["typecnt"] = type_counter.TypeCounter
 TOOLS["size_type_counter"] = size_type_counter.main
 
 USAGE = """\
 vpq stats v{0} - Run stats over joblibs
     CMDs:
-        type_counter      {1}
+        typecnt           {1}
         size_type_counter {2}
 """.format(VERSION, *[i.__doc__ for i in TOOLS.values()])
 
