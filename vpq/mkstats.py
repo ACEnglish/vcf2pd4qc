@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Main command for running stats
 """
@@ -33,6 +34,6 @@ def stats_main(args):
         sys.exit(1)
 
     args = parser.parse_args(args)
-    m_stat = vpq.STATCMDs[args.cmd](args.options)
+    m_stat = vpq.STATCMDs[args.cmd].cmd_line(args.options)
     print(m_stat.to_txt())
 

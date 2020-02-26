@@ -1,17 +1,98 @@
+"""
+Collection of methods that edit/extend/organize vpq joblibs
+"""
+import os
+import sys
+import joblib
+from enum import Enum
 from collections import Counter, OrderedDict
 
-"""
-Collection of methods that edit/extend vpq joblibs
-"""
+from pandas.api.types import CategoricalDtype
+
+
 import vpq
 
+def jl_load(data):
+    """
+    returns either a freshly opend filename 
+    or an already opened vpd joblib
+    """
+    if isinstance(data, str) and os.path.exists(data):
+        ret = joblib.load(data)
+        if ret["table"].shape[0] == 0:
+            raise Exception("joblib %s is empty. skipping" % (data))
+        return ret
+    if isinstance(data, dict) and "samples" in data and "table" in data:
+        return data
+    raise TypeError("jl_load doesn't recognize input %s" % str(data))
+
+class GT(Enum):
+    NON=3
+    REF=0
+    HET=1
+    HOM=2
+    UNK=4
+
+class SV(Enum):
+    DEL=0
+    INS=1
+    DUP=2
+    INV=3
+    NON=4 # Not and SV, SVTYPE
+    UNK=5 # Unknown SVTYPE
+ 
+SZBINS = ["[0,50)", "[50,100)", "[100,200)", "[200,300)", "[300,400)", 
+          "[400,600)", "[600,800)", "[800,1k)", "[1k,2.5k)", 
+          "[2.5k,5k)", ">=5k"]
+SZBINMAX = [50, 100, 200, 300, 400, 600, 800, 1000, 2500, 5000, sys.maxsize]
+SZBINTYPE = CategoricalDtype(categories=SZBINS, ordered=True)
 def add_sizebin_column(data):
     """
     Add size bin column
     """
-    data["table"]["szbin"] = data["table"]["svlen"].apply(vpq.size_bin)
+    def sizebin(sz):
+        """
+        Bin a given size
+        """
+        sz = abs(sz)
+        for key, maxval in zip(SZBINS, SZBINMAX):
+            if sz <= maxval:
+                return key
+
+    data["table"]["szbin"] = data["table"]["svlen"].apply(sizebin).astype(SZBINTYPE)
     return data
 
+QUALBINS = [f"[{x},{x+10})" for x in range(0, 100, 10)] + [">=100"]
+QUALBINTYPE = CategoricalDtype(categories=QUALBINS, ordered=True)
+def add_qualbin_column(data):
+    """
+    Add qualbin column to table
+    """
+    def qualbin(qual):
+        """
+        Bin a given qual
+        """
+        for idx, i in enumerate(range(0, 100, 10)):
+            if qual < i + 10:
+                return QUALBINS[idx]
+        return QUALBINS[-1]
+
+    data["table"]["qualbin"] = data["table"]["qual"].apply(qualbin).astype(QUALBINTYPE)
+    return data
+
+
+def grouper(data, values):
+    """
+    Wrapper that calls data.groupby() on the values
+    """
+    pass
+
+"""
+g = d["table"].groupby(["szbin", "qualbin", "svtype"])
+r = g["chrom"].count() # or whatever else, I reckon g.count() g.count()[:,0]?
+r["[50,100)", "[20,30)", vpq.SV.DEL.value]
+"""
+# I want to get rid of these types.
 def split_by_type(data):
     """
     subset the data by types
@@ -45,3 +126,9 @@ def sample_gt_count(data):
         data["sample_gt_count"][i] = Counter(data["table"][i + "_gt"])
     return data
  
+def qualbin_count(data):
+    """
+    Count the quality scores by bin
+    """
+    data["qualbin_count"] = Counter(data["table"]["qualbin"])
+    return data

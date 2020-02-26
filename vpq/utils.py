@@ -16,9 +16,9 @@ class SV(Enum):
     NON=4 # Not and SV, SVTYPE
     UNK=5 # Unknown SVTYPE
  
-SZBINS = ["(0,50]", "(50,100]", "(100,200]", "(200,300]", "(300,400]", 
-          "(400,600]", "(600,800]", "(800,1k]", "(1k,2.5k]", 
-          "(2.5k,5k]", ">5k"]
+SZBINS = ["[0,50)", "[50,100)", "[100,200)", "[200,300]", "[300,400)", 
+          "[400,600)", "[600,800)", "[800,1k)", "[1k,2.5k)", 
+          "[2.5k,5k)", ">=5k"]
 
 SZBINTYPE = CategoricalDtype(categories=SZBINS, ordered=True)
 
@@ -28,30 +28,30 @@ def size_bin(sz):
     """
     sz = abs(sz)
     if sz <= 50:
-        return "(0,50]"
+        return "[0,50)"
     elif sz <= 100:
-        return "(50,100]"
+        return "[50,100)"
     elif sz <= 200:
-        return "(100,200]"
+        return "[100,200)"
     elif sz <= 300:
-        return "(200,300]"
+        return "[200,300)"
     elif sz <= 400:
-        return "(300,400]"
+        return "[300,400)"
     elif sz <= 600:
-        return "(400,600]"
+        return "[400,600)"
     elif sz <= 800:
-        return "(600,800]"
+        return "[600,800)"
     elif sz <= 1000:
-        return "(800,1k]"
+        return "[800,1k)"
     elif sz <= 2500:
-        return "(1k,2.5k]"
-    elif sz < 5000:
-        return"(2.5k,5k]"
+        return "[1k,2.5k)"
+    elif sz <= 5000:
+        return"[2.5k,5k)"
     else:
-        return ">5k"
+        return ">=5k"
 
 
-QUALBINS = [f"({x},{x+10}]" for x in range(0, 100, 10)] + [">100"]
+QUALBINS = [f"[{x},{x+10})" for x in range(0, 100, 10)] + [">=100"]
 
 def qual_bin(qual):
     """
@@ -60,4 +60,5 @@ def qual_bin(qual):
     for idx, i in enumerate(range(0, 100, 10)):
         if qual < i + 10:
             return QUALBINS[idx]
+    return QUALBINS[-1]
     

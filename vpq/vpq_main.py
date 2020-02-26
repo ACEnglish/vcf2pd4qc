@@ -7,7 +7,7 @@ import argparse
 
 import vpq
 from vpq.vcf2pd import vcf2pd_main
-from vpq.stats_main import stats_main
+from vpq.mkstats import stats_main
 
 VERSION="0.0.1-dev"
 
