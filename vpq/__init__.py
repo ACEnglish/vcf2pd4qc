@@ -21,7 +21,8 @@ from vpq.stats import (
     SZBINMAX,
     SZBINTYPE,
     add_sizebin_column,
-
+    categorize_sv,
+    categorize_gt,
     QUALBINS,
     add_qualbin_column,
 
@@ -45,6 +46,7 @@ __all__ = [
     'SZBINMAX',
     'SZBINTYPE',
     'add_sizebin_column',
+    'categorize_sv',
     'QUALBINS',
     'add_qualbin_column',
     'add_cnt_column',

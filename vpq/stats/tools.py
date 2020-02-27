@@ -71,6 +71,25 @@ def add_sizebin_column(data):
     return data
 
 
+def categorize_sv(data):
+    """
+    Make SV fields categorical
+    """
+    svtype = CategoricalDtype(categories=range(len(vpq.SV)), ordered=True)
+    data["table"]['svtype'] = data["table"]["svtype"].astype(svtype)
+    return data
+
+
+def categorize_gt(data):
+    """
+    Make GT fields categorical
+    """
+    gttype = CategoricalDtype(categories=range(len(vpq.GT)), ordered=True)
+    for samp in data["table"]["gttype"]:
+        data["table"][samp + "_gt"] = data["table"][samp + "_gt"].astype(gttype)
+    return data
+
+
 QUALBINS = [f"[{x},{x+10})" for x in range(0, 100, 10)] + [">=100"]
 QUALBINTYPE = CategoricalDtype(categories=QUALBINS, ordered=True)
 
