@@ -9,7 +9,7 @@ import vpq
 from vpq.vcf2pd import vcf2pd_main
 from vpq.mkstats import stats_main
 
-VERSION="0.0.1-dev"
+VERSION = "0.0.1-dev"
 
 USAGE = """\
 vcf2pd4qc v%s - Library that assists the analysis of VCF files
@@ -19,13 +19,16 @@ vcf2pd4qc v%s - Library that assists the analysis of VCF files
         version          Print the version and exit
 """ % vpq.VERSION
 
-def version(args):
+
+def version(args): # pylint: disable=unused-argument
     """Print the version"""
     print("vcf2pd5qc v%s" % VERSION)
 
-TOOLS =  {"vcf2pd": vcf2pd_main,
-          "stats": stats_main,
-          "version": version}
+
+TOOLS = {"vcf2pd": vcf2pd_main,
+         "stats": stats_main,
+         "version": version}
+
 
 def parseArgs():
     """
@@ -44,8 +47,9 @@ def parseArgs():
         sys.exit(1)
 
     args = parser.parse_args()
-    
+
     TOOLS[args.cmd](args.options)
+
 
 if __name__ == '__main__':
     parseArgs()

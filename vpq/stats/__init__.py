@@ -1,7 +1,10 @@
+"""
+stats submodule
+"""
 from vpq.stats.cmdstat import STATCMDs
 
 from vpq.stats.tools import (
-    jl_load, 
+    jl_load,
 
     GT,
     SV,
@@ -14,15 +17,17 @@ from vpq.stats.tools import (
     QUALBINS,
     add_qualbin_column,
 
+    add_cnt_column,
+    groupcnt,
+
     split_by_type,
-    type_counter,
     sizebin_type_counter,
     sample_gt_count,
     qualbin_count,
 )
 
 __all__ = [
-    'STATCMDs'
+    'STATCMDs',
 
     'jl_load',
 
@@ -36,10 +41,12 @@ __all__ = [
 
     'QUALBINS',
     'add_qualbin_column',
-    
+
+    'add_cnt_column',
+    'groupcnt',
+
     'split_by_type',
-    'type_counter',
-    'sizebin_type_counter'
+    'sizebin_type_counter',
     'sample_gt_count',
     'qualbin_count',
 ]

@@ -1,13 +1,18 @@
+"""
+Abstraction for different parsers
+"""
 from abc import ABC, abstractmethod
+
 
 class VCF2PD(ABC):
     """
     Abstract Base Class for VCF2PD parsers
     """
+
     def __init__(self, vcf):
         self.vcf = vcf
         self.cols, self.samples = None, None
-    
+
     @abstractmethod
     def make_header(self):
         """
@@ -17,14 +22,9 @@ class VCF2PD(ABC):
             cols = list of [(column names, dtypes ), ...]
             samples = list of [samplename, ...] to parse
         """
-        pass
-    
+
     @abstractmethod
     def parse_entry(self, entry):
         """
-        Parse a single vcf entry, and turn it into a list values 
+        Parse a single vcf entry, and turn it into a list values
         """
-        pass
-
-
-

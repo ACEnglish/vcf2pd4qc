@@ -1,9 +1,11 @@
-import sys
-import types
+"""
+pipeline - Easy function chaining with futures parallelization
+"""
 import logging
 
 import concurrent.futures as cfuts
 from functools import partial, reduce
+
 
 def __reduce_wrapper(funcs, data, **kwargs):
     """
@@ -12,12 +14,14 @@ def __reduce_wrapper(funcs, data, **kwargs):
     """
     return reduce(lambda r, f: f(r, **kwargs), funcs, data)
 
+
 def __partial_wrapper(funcs):
     """
     Wrap the reduce_wrapper in a partial so it may run multiple times
     (i.e. over multiple pieces of data)
     """
     return partial(__reduce_wrapper, funcs)
+
 
 def fchain(pipe, data, workers=1):
     """
@@ -26,13 +30,13 @@ def fchain(pipe, data, workers=1):
 
     pipe: list of [(function, kwargs), ...]
         - each function must be defined with at least `def foobar(data)`.
-        - kwargs is a dictionary of other parameters the function may need. 
+        - kwargs is a dictionary of other parameters the function may need.
         - if no parameters are needed, an item in the list can just be a function
     data: list data to process
         - data must be hashable
     workers: maximum number of ThreadPoolExecutor workers to create
 
-    For example, the first yield of a 2 step pipe on the first piece of data is 
+    For example, the first yield of a 2 step pipe on the first piece of data is
     equivalent to:
         pipe[1][0](
             pipe[0][0](data[0], **pipe[0][1]),
@@ -47,14 +51,8 @@ def fchain(pipe, data, workers=1):
             my_name = future_results[future]
             try:
                 cur_result = future.result()
-            except Exception as exc:
-                logging.critical('%r generated an exception: %s' % (my_name, exc))
+            except Exception as exc:  # pylint: disable=broad-except
+                logging.critical('%r generated an exception: %s', my_name, exc)
                 # how do we stop safely... just return, or raise the exception?
                 continue
             yield cur_result
-
-
-if __name__ == '__main__':
-    test()
-
-

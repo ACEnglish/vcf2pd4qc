@@ -12,5 +12,5 @@ from vpq.parsers import (
 
 VPQParsers = OrderedDict()
 VPQParsers["skeleton"] = skeleton.skeleton
-VPQParsers["muCNV"] =  mucnv.muCNV2PD
-VPQParsers["generic"] =  generic.generic
+VPQParsers["muCNV"] = mucnv.muCNV2PD
+VPQParsers["generic"] = generic.generic

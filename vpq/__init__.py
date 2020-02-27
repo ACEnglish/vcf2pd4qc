@@ -1,3 +1,6 @@
+"""
+VPQ - Library for parsing VCFs to Pandas Dataframes for Quality Control
+"""
 from vpq.version import VERSION
 
 from vpq.parsers import (
@@ -8,8 +11,8 @@ from vpq.pipeline import fchain
 
 from vpq.stats import (
     STATCMDs,
-    
-    jl_load, 
+
+    jl_load,
 
     GT,
     SV,
@@ -22,32 +25,33 @@ from vpq.stats import (
     QUALBINS,
     add_qualbin_column,
 
+    add_cnt_column,
+    groupcnt,
+
     split_by_type,
-    type_counter,
     sizebin_type_counter,
     sample_gt_count,
-    add_qualbin_column,
     qualbin_count,
 )
 
 __all__ = [
     'VERSION',
     'fchain',
-    
-    'VPQParsers',       
-
-    'jl_load,' 
+    'VPQParsers',
+    'jl_load',
     'GT',
     'SV',
     'SZBINS',
+    'SZBINMAX',
     'SZBINTYPE',
-    'size_bin',
+    'add_sizebin_column',
     'QUALBINS',
-    'qual_bin',
+    'add_qualbin_column',
+    'add_cnt_column',
+    'groupcnt',
 
     'STATCMDs',
-    'add_sizebin_column',
+    # will be removed
     'split_by_type',
-    'type_counter',
     'sizebin_type_counter',
 ]

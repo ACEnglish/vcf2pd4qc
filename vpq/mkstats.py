@@ -4,18 +4,18 @@ Main command for running stats
 """
 import sys
 import argparse
-from collections import OrderedDict
 
 import vpq
 
-USAGE="""\
+USAGE = """\
 vpq stats v{0} - Run stats over joblibs
     CMDs:
 {1}
-""".format(vpq.VERSION,  
-           "\n".join("        {0: <15}{1}".format(x,y.__doc__)
-                    for x,y in vpq.STATCMDs.items())
-          )
+""".format(vpq.VERSION,
+           "\n".join("        {0: <15}{1}".format(x, y.__doc__)
+                     for x, y in vpq.STATCMDs.items())
+           )
+
 
 def stats_main(args):
     """
@@ -36,4 +36,3 @@ def stats_main(args):
     args = parser.parse_args(args)
     m_stat = vpq.STATCMDs[args.cmd].cmd_line(args.options)
     print(m_stat.to_txt())
-

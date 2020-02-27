@@ -1,3 +1,6 @@
+"""
+Parser for muCNV output
+"""
 import numpy
 
 import vpq
@@ -5,7 +8,8 @@ from vpq.parsers.VCF2PD import VCF2PD
 
 
 class muCNV2PD(VCF2PD):
-    
+    """ Parser for muCNT output """
+
     def __init__(self, vcf):
         super().__init__(vcf)
         self.cols, self.samples = self.make_header()
@@ -62,13 +66,13 @@ class muCNV2PD(VCF2PD):
         svtype = entry.info["SVTYPE"]
         # Convert STR to ENUM
         if svtype == "DEL":
-            svtype = vutil.SV.DEL.value
+            svtype = vpq.SV.DEL.value
         elif svtype == "INS":
-            svtype = vutil.SV.INS.value
+            svtype = vpq.SV.INS.value
         elif svtype == "DUP":
-            svtype = vutil.SV.DUP.value
+            svtype = vpq.SV.DUP.value
         elif svtype == "INV":
-            svtype = vutil.SV.INV.value
+            svtype = vpq.SV.INV.value
         else:
             print("UNK SVTYPE!! %s" % (str(entry)))
 
@@ -82,7 +86,7 @@ class muCNV2PD(VCF2PD):
                entry.info["AF"][0],
                entry.info["CALLRATE"],
                muBP_start, muBP_end, abs(muBP_end - muBP_start)]
-        gts, dps = extract_sample(entry)
+        gts, dps = self.extract_sample(entry)
         cur.extend(gts)
         cur.extend(dps)
         return cur

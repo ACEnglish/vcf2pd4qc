@@ -1,7 +1,11 @@
+"""
+Generic vcf parser - more functional than skeleton, but also assumes a "clean" vcf
+"""
 import numpy
 
 import vpq
 from vpq.parsers.VCF2PD import VCF2PD
+
 
 class generic(VCF2PD):
     """ Parse generic VCF """
@@ -30,6 +34,7 @@ class generic(VCF2PD):
         cols.extend([(x + "_dp", numpy.int) for x in samples])
         return cols, samples
 
+    @staticmethod
     def extract_sample(self, entry):
         """ Extract the GT, GQ and DP for all the samples """
         gts = []
@@ -57,10 +62,10 @@ class generic(VCF2PD):
 
     def parse_entry(self, entry):
         """ Parse very minimal information from a vcf to make a pd """
-        # If someone made SVTYPE= some number 0-len(SV), this would cause an issue for 
+        # If someone made SVTYPE= some number 0-len(SV), this would cause an issue for
         # the last part of below if statement
         svtype = entry.info["SVTYPE"] if "SVTYPE" in entry.info else vpq.SV.NON.value
-        svlen = entry.info["SVLEN"] if "SVLEN" in entry.info else 0 
+        svlen = entry.info["SVLEN"] if "SVLEN" in entry.info else 0
         # Convert STR to ENUM
         if svtype == "DEL":
             svtype = vpq.SV.DEL.value
@@ -72,10 +77,9 @@ class generic(VCF2PD):
             svtype = vpq.SV.INV.value
         elif svtype not in vpq.SV:
             svtype = vpq.SV.UNK.value
-        ret = [entry.chrom, entry.start, entry.stop, entry.qual, ";".join(entry.filter.keys()), svtype, svlen]    
+        ret = [entry.chrom, entry.start, entry.stop, entry.qual, ";".join(entry.filter.keys()), svtype, svlen]
         gts, gqs, dps = self.extract_sample(entry)
         ret.extend(gts)
         ret.extend(gqs)
         ret.extend(dps)
         return ret
-

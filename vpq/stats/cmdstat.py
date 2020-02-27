@@ -6,45 +6,47 @@ from io import StringIO
 from abc import ABC, abstractmethod
 from collections import defaultdict, Counter, OrderedDict
 
+import numpy as np
+import pandas as pd
+
 import vpq
+
 
 class CMDStat(ABC):
     """
     ABC of a command stat line tool
     """
     pname = "CMDStat"
+
     def __init__(self):
         """
         Stats must have a name for the command line
         """
-        pass
-    
+
     @staticmethod
-    def parse_args(cls, args):
+    def parse_args(mcls, args):
         """ parse args """
-        parser = argparse.ArgumentParser(prog=cls.pname, description=cls.__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        parser = argparse.ArgumentParser(prog=mcls.pname, description=mcls.__doc__,
+                                         formatter_class=argparse.RawDescriptionHelpFormatter)
         parser.add_argument("vpd", nargs="+",
                             help="vcf2pd.jl files to parse")
         parser.add_argument("-t", "--threads", default=1, type=int,
                             help="Number of threads to use")
         return parser.parse_args(args)
-    
+
     @classmethod
     @abstractmethod
     def cmd_line(cls, args):
         """
         Run the stat from command line
         """
-        pass
-    
+
     @abstractmethod
     def to_txt(self):
         """
         Convert the result to text
         """
-        pass
-    
+
     def write_table(self, fn):
         """
         Write self.to_txt()
@@ -56,15 +58,20 @@ class CMDStat(ABC):
 class TypeCounter(CMDStat):
     """ Count the SVTYPEs """
     pname = "typecnt"
+
     def __init__(self, vpds, threads=1):
         super().__init__()
         pipe = [vpq.jl_load,
-               vpq.type_counter]
+                vpq.add_cnt_column,
+                (vpq.groupcnt, {"key": "type_count", "group": ["svtype"]})
+                ]
         # Consolidate
-        self.result = Counter()
+        self.result = pd.DataFrame(np.zeros(len(vpq.SV), dtype=int),
+                                   columns=["cnt"],
+                                   index=range(len(vpq.SV)))
         for piece in vpq.fchain(pipe, vpds, threads):
-            self.result.update(piece["type_count"])
-    
+            self.result = self.result.add(piece["type_count"], axis=0)
+
     @classmethod
     def cmd_line(cls, args):
         """ Parse args and return init'd object """
@@ -79,21 +86,22 @@ class TypeCounter(CMDStat):
         ret.write("##" + self.__doc__ + '\n')
         ret.write("#svtype\tcount\n")
         for i in vpq.SV:
-            ret.write('{name}\t{count:,}\n'.format(name=i.name, count=self.result[i.value]))
+            ret.write('{name}\t{count:,.0f}\n'.format(name=i.name, count=self.result.loc[i.value]["cnt"]))
         ret.seek(0)
         return ret.read()
+
 
 class SizebinTypeCounter(CMDStat):
     """ Count the SVType by Sizebin """
 
     pname = "size_type_cnt"
-    
+
     def __init__(self, vpds, threads=1):
         super().__init__()
-        pipe = [vpq.jl_load, 
-               vpq.add_sizebin_column,
-               vpq.split_by_type,
-               vpq.sizebin_type_counter]
+        pipe = [vpq.jl_load,
+                vpq.add_sizebin_column,
+                vpq.split_by_type,
+                vpq.sizebin_type_counter]
         # Consolidate
         self.result = defaultdict(Counter)
         for piece in vpq.fchain(pipe, vpds, threads):
@@ -118,6 +126,7 @@ class SizebinTypeCounter(CMDStat):
         ret.seek(0)
         return ret.read()
 
+
 class SampleGTCounter(CMDStat):
     """ Per Sample GT Counts """
 
@@ -126,7 +135,7 @@ class SampleGTCounter(CMDStat):
     def __init__(self, vpds, threads):
         super().__init__()
         pipe = [vpq.jl_load,
-               vpq.sample_gt_count]
+                vpq.sample_gt_count]
         self.result = defaultdict(Counter)
         # consolidate
         for piece in vpq.fchain(pipe, vpds, threads):
@@ -138,7 +147,6 @@ class SampleGTCounter(CMDStat):
         """ Parse args and return init'd object """
         args = super().parse_args(cls, args)
         return cls(args.vpd, args.threads)
-
 
     def to_txt(self):
         """
@@ -158,6 +166,7 @@ class SampleGTCounter(CMDStat):
         ret.seek(0)
         return ret.read()
 
+
 class QualbinCounter(CMDStat):
     """ Quality score counts by bin """
 
@@ -166,13 +175,13 @@ class QualbinCounter(CMDStat):
     def __init__(self, vpds, threads=1):
         super().__init__()
         pipe = [vpq.jl_load,
-               vpq.add_qualbin_column,
-               vpq.qualbin_count]
+                vpq.add_qualbin_column,
+                vpq.qualbin_count]
         # consolidate
         self.result = Counter()
         for piece in vpq.fchain(pipe, vpds, threads):
             self.result.update(piece["qualbin_count"])
- 
+
     @classmethod
     def cmd_line(cls, args):
         """ Parse args and return init'd object """
@@ -189,8 +198,8 @@ class QualbinCounter(CMDStat):
         ret.seek(0)
         return ret.read()
 
-#inprogress
-#class SVCountPerChromType(CMDStat):
+# inprogress
+# class SVCountPerChromType(CMDStat):
 #    """ Number of SVs per chromosome by type """
 #
 #    def __init__(self, args):
@@ -201,10 +210,10 @@ class QualbinCounter(CMDStat):
 #                #(vpq.split_by_type, {"split":,
 #
 
+
 # Lookup of each of the commands for easy calling by stats_main
 STATCMDs = OrderedDict()
 STATCMDs["type_cnt"] = TypeCounter
 STATCMDs["size_type_cnt"] = SizebinTypeCounter
 STATCMDs["sample_gt_cnt"] = SampleGTCounter
 STATCMDs["qualbin_cnt"] = QualbinCounter
-
