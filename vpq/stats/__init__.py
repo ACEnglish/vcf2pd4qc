@@ -1,41 +1,52 @@
-import sys
-import argparse
-from collections import OrderedDict
+"""
+stats submodule
+"""
+from vpq.stats.cmdstat import STATCMDs
 
-from vpq.stats import (
-    type_counter,
-    size_type_counter
+from vpq.stats.tools import (
+    jl_load,
+
+    GT,
+    SV,
+
+    SZBINS,
+    SZBINMAX,
+    SZBINTYPE,
+    add_sizebin_column,
+
+    QUALBINS,
+    add_qualbin_column,
+
+    add_cnt_column,
+    groupcnt,
+
+    split_by_type,
+    sizebin_type_counter,
+    sample_gt_count,
+    qualbin_count,
 )
 
-VERSION="0.0.1-dev"
+__all__ = [
+    'STATCMDs',
 
-TOOLS = OrderedDict()
-TOOLS["type_counter"] = type_counter.main
-TOOLS["size_type_counter"] = size_type_counter.main
+    'jl_load',
 
-USAGE = """\
-vpq stats v{0} - Run stats over joblibs
-    CMDs:
-        type_counter      {1}
-        size_type_counter {2}
-""".format(VERSION, *[i.__doc__ for i in TOOLS.values()])
+    'GT',
+    'SV',
 
-def stats_main(args):
-    """
-    Argument parsing
-    """
-    parser = argparse.ArgumentParser(prog="vpq stats", description=USAGE,
-                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+    'SZBINS',
+    'SZBINMAX',
+    'SZBINTYPE',
+    'add_sizebin_column',
 
-    parser.add_argument("cmd", metavar="CMD", choices=TOOLS.keys(), type=str,
-                        help="Command to execute")
-    parser.add_argument("options", metavar="OPTIONS", nargs=argparse.REMAINDER,
-                        help="Options to pass to the command")
+    'QUALBINS',
+    'add_qualbin_column',
 
-    if len(args) == 1:
-        parser.print_help(sys.stderr)
-        sys.exit(1)
+    'add_cnt_column',
+    'groupcnt',
 
-    args = parser.parse_args(args)
-    TOOLS[args.cmd](args.options)
-
+    'split_by_type',
+    'sizebin_type_counter',
+    'sample_gt_count',
+    'qualbin_count',
+]

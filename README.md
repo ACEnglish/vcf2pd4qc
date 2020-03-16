@@ -2,7 +2,6 @@
 
 Library that assists analysis of VCF files
 
-
 # Installation
 1) Download the repository
 ```git clone https://github.com/ACEnglish/vcf2pd4qc.git && cd vcf2pd4qc/```
@@ -15,4 +14,5 @@ Library that assists analysis of VCF files
 
 
 
+![alt text](misc/figure1.png "Overview")
 

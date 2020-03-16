@@ -3,121 +3,68 @@
 """
 Convert a vcf into a dataframe
 """
-import sys
 import argparse
-from collections import Counter
 
-import numpy
 import pysam
 import joblib
 import pandas as pd
 
-from vpq.utils import GT, SV
+import vpq
 
-def extract_sample(entry):
-    """
-    Extract the GT and normalized depth for all the samples
-    """
-    gts = []
-    dps = []
-    for sample in entry.samples:
-        gt = entry.samples[sample]["GT"]
-        if None in gt:
-            gt = GT.NON.value
-        elif gt == (0, 0):
-            gt = GT.REF.value
-        elif gt == (0, 1):
-            gt = GT.HET.value
-        elif gt == (1, 1):
-            gt = GT.HOM.value
-        else:
-            gt = GT.UNK.value
-        gts.append(gt)
-        dps.append(entry.samples[sample]["DP"])
-    
-    return gts, dps
 
-def make_header(v):
-    """
-    Given a vcf, make the dataframe header information
-    returns columns [(name, type), ..], [samples, ...]
-    """
-    cols = [("chrom", str), 
-            ("start", int),
-            ("end", int),
-            ("svtype", numpy.uint8),
-            ("svlen", int),
-            ("ac", numpy.uint16),
-            ("ns", numpy.uint16),
-            ("af", numpy.float32),
-            ("callrate", numpy.float16),
-            ("mustart", int),
-            ("muend", int),
-            ("mulen", int)]
-    # Collecting sample header
-    samples = [x for x in v.header.samples]
-    cols.extend([(x + "_gt", numpy.uint8) for x in samples])
-    cols.extend([(x + "_dp", numpy.float16) for x in samples])
-    return cols, samples
-
-def vcf_to_frame(m_vcf, cols, chrom=None, start=None, end=None):
+def vcf_to_frame(m_converter, chrom=None, start=None, end=None):
     """
     Pull in all of the relevant information for parsing the SVs
     """
     # Fetch every entry over the region
+    m_vcf = m_converter.vcf
     if chrom is not None:
         fetch = m_vcf.fetch(chrom, start, end)
     else:
         fetch = m_vcf
-    
+
     data = []
     for entry in fetch:
-        if chrom is not None and not (start <= entry.pos < end):
-            continue # start must be in region - prevent duplicated entries
-        muBP_start, muBP_end = muBP(entry)
-        svtype = entry.info["SVTYPE"]
-        # Convert STR to ENUM
-        if svtype == "DEL":
-            svtype = SV.DEL.value
-        elif svtype == "INS":
-            svtype = SV.INS.value
-        elif svtype == "DUP":
-            svtype = SV.DUP.value
-        elif svtype == "INV":
-            svtype = SV.INV.value
-        else:
-            print("UNK SVTYPE!! %s" % (str(entry)))
-        cur = [entry.chrom,
-               entry.start, 
-               entry.stop,
-               svtype,
-               entry.info["SVLEN"],
-               entry.info["AC"],
-               entry.info["NS"],
-               entry.info["AF"][0],
-               entry.info["CALLRATE"],
-               muBP_start, muBP_end, abs(muBP_end - muBP_start)]
-        gts, dps = extract_sample(entry)
-        cur.extend(gts)
-        cur.extend(dps)
-        # type casting - I hate that I'm making the current row twice, could be improved
-        data.append([t[1](x) for t,x in zip(cols, cur)])
-    ret = pd.DataFrame(data, columns=[x[0] for x in cols]) 
+        if chrom is not None and not start <= entry.pos < end:
+            continue  # start must be in region - prevent duplicated entries
+        cur = m_converter.parse_entry(entry)
+        data.append([t[1](x) for t, x in zip(m_converter.cols, cur)])
+
+    ret = pd.DataFrame(data, columns=[x[0] for x in m_converter.cols])
     return ret
 
 
 def parse_args(args):
+    """
+    argparse
+    """
     parser = argparse.ArgumentParser(prog="vcf2pd", description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("vcf_fn",
                         help="vcf to parse")
-    parser.add_argument("-r", "--region", default=None,
-                        help="CHROM:START-END to parse")
+    parser.add_argument("-r", "--regions", default=None,
+                        help="Bed File of chrom, start, end, name to create")
     parser.add_argument("-o", "--out", default="vcf2pd.jl",
-                        help="Joblib file to write")
+                        help="Joblib file outfile suffix ('chrname.jl' may be appended from -r)")
+    parser.add_argument("-p", "--parser", choices=vpq.VPQParsers.keys(), default='skeleton',
+                        help="Column parsing object")
+    parser.add_argument("-t", "--threads", default=1, type=int,
+                        help="When regions are provided, allow up to threads workers")
     return parser.parse_args(args)
 
-    
+
+def task(item):
+    """
+    Given a task item, do the work
+    task item is a dictionary of {"input":input.vcf, "parser": parsername, "output":outputname, "chrom", "start", "end"}
+    """
+    v = pysam.VariantFile(item["input"]) # pylint: disable=no-member
+    m_converter = vpq.VPQParsers[item["parser"]](v)  # Something I'll figure out how to get...?
+    cols, samples = m_converter.make_header()
+    data = {"table": vcf_to_frame(m_converter, item["chrom"], item["start"], item["end"]), "samples": samples}
+    joblib.dump(data, item["output"], compress=9)
+
+
 def vcf2pd_main(args):
     """
     Run the program
@@ -125,14 +72,23 @@ def vcf2pd_main(args):
     args = parse_args(args)
     vcf_fn = args.vcf_fn
     # We'll require regions to start
-    if args.region is None:
-        chrom, start, end = None, None, None
+    regions = []
+    if args.regions is None:
+        regions.append((None, None, None, 'all'))
     else:
-        chrom, other = args.region.split(':')
-        start, end = [int(x) for x in other.split('-')]
-        
-    v = pysam.VariantFile(vcf_fn)
-    cols, samples = make_header(v)
-    data = {"table": vcf_to_frame(v, cols, chrom, start, end), "samples": samples}
-    joblib.dump(data, args.out, compress=9)
-
+        with open(args.regions, 'r') as fh:
+            for line in fh:
+                data = line.strip().split('\t')
+                data[1] = int(data[1])
+                data[2] = int(data[2])
+                regions.append(data[:4])
+    items = []
+    for chrom, start, end, name in regions:
+        if name is not None:
+            oname = "%s%s%s.jl" % (args.out, chrom, name)
+        else:
+            oname = args.out + ".jl"
+        items.append({"input": vcf_fn, "parser": args.parser, "output": oname,
+                      "chrom": chrom, "start": start, "end": end})
+    # must iterate once to ensure we got the results made
+    [_  for _ in vpq.fchain([task], items, args.threads)]

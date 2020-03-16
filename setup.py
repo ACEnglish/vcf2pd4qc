@@ -11,7 +11,7 @@ setup(
     author="ACEnglish",
     author_email="acenglish@gmail.com",
     url="https://github.com/acengish/vcf2pd4qc",
-    packages=['vpq', 'vpq/stats', 'vpq/examples'],
+    packages=['vpq', 'vpq/stats', 'vpq/examples', 'vpq/parsers'],
     license='MIT',
     scripts=["bin/vpq"],
     description="Library that assists the analysis of VCF files",

@@ -5,26 +5,29 @@ Main entry point for the sub commands
 import sys
 import argparse
 
+import vpq
 from vpq.vcf2pd import vcf2pd_main
-from vpq.stats import stats_main
+from vpq.mkstats import stats_main
 
-VERSION="0.0.1-dev"
+VERSION = "0.0.1-dev"
 
 USAGE = """\
 vcf2pd4qc v%s - Library that assists the analysis of VCF files
     CMDs:
-        vcf2pd           Convert a vcf file to a joblib
+        vcf2pd           Convert vcf to joblib
         stats            Run stats over joblibs
         version          Print the version and exit
-""" % VERSION
+""" % vpq.VERSION
 
-def version(args):
+
+def version(args): # pylint: disable=unused-argument
     """Print the version"""
     print("vcf2pd5qc v%s" % VERSION)
 
-TOOLS =  {"vcf2pd": vcf2pd_main,
-          "stats": stats_main,
-          "version": version}
+
+TOOLS = {"vcf2pd": vcf2pd_main,
+         "stats": stats_main,
+         "version": version}
 
 
 def parseArgs():
@@ -44,8 +47,9 @@ def parseArgs():
         sys.exit(1)
 
     args = parser.parse_args()
-    
+
     TOOLS[args.cmd](args.options)
+
 
 if __name__ == '__main__':
     parseArgs()
