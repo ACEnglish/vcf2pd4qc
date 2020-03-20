@@ -34,7 +34,6 @@ class generic(VCF2PD):
         cols.extend([(x + "_dp", numpy.int) for x in samples])
         return cols, samples
 
-    @staticmethod
     def extract_sample(self, entry):
         """ Extract the GT, GQ and DP for all the samples """
         gts = []

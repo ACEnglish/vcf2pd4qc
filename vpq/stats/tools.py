@@ -12,19 +12,17 @@ from pandas.api.types import CategoricalDtype
 import vpq
 
 
-def jl_load(data):
-    """
-    returns either a freshly opend filename
-    or an already opened vpd joblib
-    """
-    if isinstance(data, str) and os.path.exists(data):
-        ret = joblib.load(data)
-        if ret["table"].shape[0] == 0:
-            raise Exception("joblib %s is empty. skipping" % (data))
-        return ret
-    if isinstance(data, dict) and "samples" in data and "table" in data:
-        return data
-    raise TypeError("jl_load doesn't recognize input %s" % str(data))
+SZBINS = ["[0,50)", "[50,100)", "[100,200)", "[200,300)", "[300,400)",
+          "[400,600)", "[600,800)", "[800,1k)", "[1k,2.5k)",
+          "[2.5k,5k)", ">=5k"]
+SZBINMAX = [50, 100, 200, 300, 400, 600, 800, 1000, 2500, 5000, sys.maxsize]
+SZBINTYPE = CategoricalDtype(categories=SZBINS, ordered=True)
+
+QUALBINS = [f"[{x},{x+10})" for x in range(0, 100, 10)] + [">=100"]
+QUALBINTYPE = CategoricalDtype(categories=QUALBINS, ordered=True)
+
+HG19TYPE = CategoricalDtype(categories=[str(x) for x in range(1, 22)] + ["X", "Y"], ordered=True)
+GRCH38TYPE = CategoricalDtype(categories=["chr" + str(x) for x in range(1, 22)] + ["chrX", "chrY"], ordered=True)
 
 
 class GT(Enum):
@@ -46,11 +44,19 @@ class SV(Enum):
     UNK = 5  # Unknown SVTYPE
 
 
-SZBINS = ["[0,50)", "[50,100)", "[100,200)", "[200,300)", "[300,400)",
-          "[400,600)", "[600,800)", "[800,1k)", "[1k,2.5k)",
-          "[2.5k,5k)", ">=5k"]
-SZBINMAX = [50, 100, 200, 300, 400, 600, 800, 1000, 2500, 5000, sys.maxsize]
-SZBINTYPE = CategoricalDtype(categories=SZBINS, ordered=True)
+def jl_load(data):
+    """
+    returns either a freshly opend filename
+    or an already opened vpd joblib
+    """
+    if isinstance(data, str) and os.path.exists(data):
+        ret = joblib.load(data)
+        if ret["table"].shape[0] == 0:
+            raise Exception("joblib %s is empty. skipping" % (data))
+        return ret
+    if isinstance(data, dict) and "samples" in data and "table" in data:
+        return data
+    raise TypeError("jl_load doesn't recognize input %s" % str(data))
 
 
 def add_sizebin_column(data):
@@ -71,8 +77,23 @@ def add_sizebin_column(data):
     return data
 
 
-QUALBINS = [f"[{x},{x+10})" for x in range(0, 100, 10)] + [">=100"]
-QUALBINTYPE = CategoricalDtype(categories=QUALBINS, ordered=True)
+def categorize_sv(data):
+    """
+    Make SV fields categorical
+    """
+    svtype = CategoricalDtype(categories=range(len(vpq.SV)), ordered=True)
+    data["table"]['svtype'] = data["table"]["svtype"].astype(svtype)
+    return data
+
+
+def categorize_gt(data):
+    """
+    Make GT fields categorical
+    """
+    gttype = CategoricalDtype(categories=range(len(vpq.GT)), ordered=True)
+    for samp in data["table"]["gttype"]:
+        data["table"][samp + "_gt"] = data["table"][samp + "_gt"].astype(gttype)
+    return data
 
 
 def add_qualbin_column(data):
@@ -108,28 +129,6 @@ def groupcnt(data, key, group):
     return data
 
 
-# I want to get rid of these types.
-
-
-def split_by_type(data):
-    """
-    subset the data by types
-    """
-    data["table_by_type"] = {i: data["table"].loc[data["table"]["svtype"] == i.value]
-                             for i in vpq.SV}
-    return data
-
-
-def sizebin_type_counter(data):
-    """
-    Create sizebin_type_count item
-    """
-    data["sizebin_type_count"] = {}
-    for subtype, tab in data["table_by_type"].items():
-        data["sizebin_type_count"][subtype] = Counter(tab["szbin"])
-    return data
-
-
 def sample_gt_count(data):
     """
     Per GT, count the number of alleles per sample genotyped as such
@@ -137,12 +136,4 @@ def sample_gt_count(data):
     data["sample_gt_count"] = {}
     for i in data["samples"]:
         data["sample_gt_count"][i] = Counter(data["table"][i + "_gt"])
-    return data
-
-
-def qualbin_count(data):
-    """
-    Count the quality scores by bin
-    """
-    data["qualbin_count"] = Counter(data["table"]["qualbin"])
     return data
