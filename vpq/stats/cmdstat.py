@@ -209,15 +209,6 @@ class QualbinCounter(CMDStat):
 # inprogress
 # class SVCountPerChromType(CMDStat):
 #    """ Number of SVs per chromosome by type """
-#
-#    def __init__(self, args):
-#        super().__init__("svchromtype_cnt", self.__doc__)
-#        args = self.parse_args(args)
-#        pipe = [vpq.jl_load,
-#                vpq.split_by_chrom,
-#                #(vpq.split_by_type, {"split":,
-#
-
 
 # Lookup of each of the commands for easy calling by stats_main
 STATCMDs = OrderedDict()
