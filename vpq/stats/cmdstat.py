@@ -69,6 +69,7 @@ class TypeCounter(CMDStat):
         self.result = pd.DataFrame(np.zeros(len(vpq.SV), dtype=int),
                                    columns=["cnt"],
                                    index=range(len(vpq.SV)))
+        total = len(vpds)
         for piece in vpq.fchain(pipe, vpds, threads):
             self.result = self.result.add(piece["type_count"].fillna(0), axis=0)
         self.result = self.result.fillna(0)

@@ -49,9 +49,16 @@ class muCNV2PD(VCF2PD):
                 ("ns", numpy.uint16),
                 ("af", numpy.float32),
                 ("callrate", numpy.float16),
-                ("mustart", int),
-                ("muend", int),
-                ("mulen", int)]
+                ("okg_af", numpy.float32),
+                ("dbvar", bool),
+                ("lrepeat", str),
+                ("rrepeat", str),
+                ("imh_af", numpy.float32),
+                ("gd_af", numpy.float32),
+                ("dgv_lossfreq", numpy.float32),
+                ("dgv_gainfreq", numpy.float32),
+                ("hits_gene", bool)
+                ]
         # Collecting sample header
         samples = [x for x in self.vcf.header.samples]
         cols.extend([(x + "_gt", numpy.uint8) for x in samples])
@@ -62,7 +69,6 @@ class muCNV2PD(VCF2PD):
         """
         Pull in all of the relevant information for an event
         """
-        muBP_start, muBP_end = muBP(entry)
         svtype = entry.info["SVTYPE"]
         # Convert STR to ENUM
         if svtype == "DEL":
@@ -85,7 +91,16 @@ class muCNV2PD(VCF2PD):
                entry.info["NS"],
                entry.info["AF"][0],
                entry.info["CALLRATE"],
-               muBP_start, muBP_end, abs(muBP_end - muBP_start)]
+               entry.info["1000g_AF"] if "1000g_AF" in entry.info else -1,
+               "dbVar_event" in entry.info,
+               ",".join(entry.info["Repeats_type_left"]) if "Repeats_type_left" in entry.info else "",
+               ",".join(entry.info["Repeats_type_right"]) if "Repeats_type_right" in entry.info else "",
+               entry.info["IMH_AF"] if "IMH_AF" in entry.info else -1,
+               entry.info["GD_AF"] if "GD_AF" in entry.info else -1,
+               entry.info["DGV_LOSS_Frequency"] if "DGV_LOSS_Frequency" in entry.info else -1,
+               entry.info["DGV_GAIN_Frequency"] if "DGV_GAIN_Frequency" in entry.info else -1,
+               "Gene_name" in entry.info
+               ]
         gts, dps = self.extract_sample(entry)
         cur.extend(gts)
         cur.extend(dps)
