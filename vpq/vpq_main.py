@@ -3,6 +3,7 @@
 Main entry point for the sub commands
 """
 import sys
+import logging
 import argparse
 
 import vpq
@@ -37,6 +38,8 @@ def parseArgs():
     parser = argparse.ArgumentParser(prog="vpq", description=USAGE,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
 
+    parser.add_argument("--debug", action="store_true",
+                        help="Verbose run logs")
     parser.add_argument("cmd", metavar="CMD", choices=TOOLS.keys(), type=str,
                         help="Command to execute")
     parser.add_argument("options", metavar="OPTIONS", nargs=argparse.REMAINDER,
@@ -45,9 +48,12 @@ def parseArgs():
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
         sys.exit(1)
-
+    
     args = parser.parse_args()
-
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.INFO)
     TOOLS[args.cmd](args.options)
 
 
