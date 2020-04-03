@@ -21,8 +21,8 @@ SZBINTYPE = CategoricalDtype(categories=SZBINS, ordered=True)
 QUALBINS = [f"[{x},{x+10})" for x in range(0, 100, 10)] + [">=100"]
 QUALBINTYPE = CategoricalDtype(categories=QUALBINS, ordered=True)
 
-HG19TYPE = CategoricalDtype(categories=[str(x) for x in range(1, 22)] + ["X", "Y"], ordered=True)
-GRCH38TYPE = CategoricalDtype(categories=["chr" + str(x) for x in range(1, 22)] + ["chrX", "chrY"], ordered=True)
+HG19TYPE = CategoricalDtype(categories=[str(x) for x in range(1, 23)] + ["X", "Y"], ordered=True)
+GRCH38TYPE = CategoricalDtype(categories=["chr" + str(x) for x in range(1, 23)] + ["chrX", "chrY"], ordered=True)
 
 
 class GT(Enum):
@@ -59,21 +59,22 @@ def jl_load(data):
     raise TypeError("jl_load doesn't recognize input %s" % str(data))
 
 
+def get_sizebin(sz):
+    """
+    Bin a given size
+    """
+    sz = abs(sz)
+    for key, maxval in zip(SZBINS, SZBINMAX):
+        if sz <= maxval:
+            return key
+    return None
+
+
 def add_sizebin_column(data):
     """
     Add size bin column
     """
-    def sizebin(sz):
-        """
-        Bin a given size
-        """
-        sz = abs(sz)
-        for key, maxval in zip(SZBINS, SZBINMAX):
-            if sz <= maxval:
-                return key
-        return None
-
-    data["table"]["szbin"] = data["table"]["svlen"].apply(sizebin).astype(SZBINTYPE)
+    data["table"]["szbin"] = data["table"]["svlen"].apply(get_sizebin).astype(SZBINTYPE)
     return data
 
 
